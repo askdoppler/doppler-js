@@ -1,0 +1,12 @@
+{
+  "extends": "../core/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "type": "module",
+  "include": ["src/**/*.ts"]
+}

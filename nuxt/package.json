@@ -1,0 +1,38 @@
+{
+  "name": "@askdoppler/nuxt",
+  "version": "0.1.2",
+  "description": "Doppler Nuxt integration for AI traffic monitoring.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@askdoppler/core": "^0.1.2",
+    "nuxt": "^3.17.3",
+    "h3": "^1.15.3"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^3.0.0",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/askdoppler/doppler-js.git"
+  },
+  "author": "AskDoppler <hello@askdoppler.com>",
+  "license": "MIT",
+  "type": "module"
+}

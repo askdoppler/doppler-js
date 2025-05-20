@@ -1,0 +1,47 @@
+{
+  "name": "@askdoppler/core",
+  "version": "0.1.2",
+  "description": "Doppler Core: AI SEO / AEO traffic monitoring & intent detection, logging, and reporting for framework connectors.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "doppler",
+    "askdoppler",
+    "ai-monitoring",
+    "ai-seo",
+    "ai-agent",
+    "aeo",
+    "middleware",
+    "traffic-analysis",
+    "llm",
+    "detection"
+  ],
+  "author": "AskDoppler <hello@askdoppler.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/askdoppler/doppler-js.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.20",
+    "typescript": "^5.8.3"
+  }
+}
