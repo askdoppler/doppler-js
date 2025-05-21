@@ -1,23 +1,32 @@
-import { defineNuxtModule, addServerHandler, createResolver } from "@nuxt/kit";
+import { defineNuxtModule, addPlugin, createResolver, addServerHandler } from '@nuxt/kit';
 
-export default defineNuxtModule({
+// Module options TypeScript interface definition
+export interface ModuleOptions {
+  apiKey: string;
+  baseUrl: string;
+}
+
+export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: "@askdoppler/nuxt",
-    configKey: "doppler",
+    name: '@askdoppler/nuxt',
+    configKey: 'doppler',
   },
+  // Default configuration options of the Nuxt module
   defaults: {
-    apiKey: "",
+    apiKey: '',
+    baseUrl: 'https://askdoppler.com',
   },
-  setup(options) {
-    process.env.DOPPLER_API_KEY = options.apiKey;
-    const { resolve } = createResolver(import.meta.url);
+  setup(options, nuxt) {
+    nuxt.options.runtimeConfig.doppler = options;
+
+    const resolver = createResolver(import.meta.url);
+
+    // Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
+    addPlugin(resolver.resolve('./runtime/plugin'));
 
     addServerHandler({
-      route: "",
-      handler: resolve("./middleware"),
-      options: {
-        apiKey: options.apiKey,
-      },
+      middleware: true,
+      handler: resolver.resolve('./runtime/server/middleware'),
     });
   },
 });

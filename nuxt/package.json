@@ -1,38 +1,71 @@
 {
   "name": "@askdoppler/nuxt",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Doppler Nuxt integration for AI traffic monitoring.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "clean": "rm -rf dist"
+  "author": "AskDoppler <hello@askdoppler.com>",
+  "keywords": [
+    "doppler",
+    "askdoppler",
+    "ai-monitoring",
+    "ai-seo",
+    "ai-agent",
+    "aeo",
+    "traffic-analysis",
+    "llm-traffic",
+    "nuxt-3",
+    "nuxt",
+    "nuxt-module"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/askdoppler/doppler-js"
   },
+  "license": "MIT",
+  "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
     }
   },
   "files": [
     "dist"
   ],
+  "scripts": {
+    "prepack": "nuxt-module-build build",
+    "dev": "nuxi dev playground",
+    "dev:build": "nuxi build playground",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+    "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
+  },
   "dependencies": {
     "@askdoppler/core": "^0.1.2",
-    "nuxt": "^3.17.3",
-    "h3": "^1.15.3"
+    "@nuxt/kit": "^3.17.3"
   },
   "devDependencies": {
-    "@nuxt/kit": "^3.0.0",
-    "typescript": "^5.3.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/askdoppler/doppler-js.git"
-  },
-  "author": "AskDoppler <hello@askdoppler.com>",
-  "license": "MIT",
-  "type": "module"
+    "@nuxt/devtools": "^2.4.1",
+    "@nuxt/eslint-config": "^1.4.0",
+    "@nuxt/module-builder": "^1.0.1",
+    "@nuxt/schema": "^3.17.3",
+    "@nuxt/test-utils": "^3.19.0",
+    "@types/node": "latest",
+    "changelogen": "^0.6.1",
+    "eslint": "^9.27.0",
+    "nuxt": "^3.17.3",
+    "typescript": "~5.8.3",
+    "vitest": "^3.1.4",
+    "vue-tsc": "^2.2.10"
+  }
 }

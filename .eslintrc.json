@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "semi": ["error", "always"],
+    "no-extra-semi": "off"
+  },
+  "extends": ["plugin:prettier/recommended", "prettier"],
+  "plugins": ["prettier"]
+}

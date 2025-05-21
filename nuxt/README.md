@@ -16,19 +16,11 @@ npm install @askdoppler/nuxt @askdoppler/core
 
 ```ts
 export default defineNuxtConfig({
-  modules: ["@askdoppler/nuxt"],
+  modules: ['@askdoppler/nuxt'],
   doppler: {
-    apiKey: "your-api-key-here",
+    apiKey: 'your-api-key-here',
   },
 });
-```
-
-3. Set the API key in your environment:
-
-In your `.env` file:
-
-```ini
-DOPPLER_API_KEY=your-api-key-here
 ```
 
 That’s it — the module will log eligible AI-originated traffic automatically, head to the dashboard on [Doppler](https://askdoppler.com) to see the results.
