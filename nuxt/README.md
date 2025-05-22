@@ -6,10 +6,13 @@ Nuxt 3 module for Doppler AI SEO detection and logging.
 
 1. Install:
 
+Use your favorite package manager:
+
 ```sh
-bun add @askdoppler/nuxt @askdoppler/core
-yarn add @askdoppler/nuxt @askdoppler/core
-npm install @askdoppler/nuxt @askdoppler/core
+bun add @askdoppler/nuxt
+yarn add @askdoppler/nuxt
+npm install @askdoppler/nuxt
+pnpm add @askdoppler/nuxt
 ```
 
 2. Add to your nuxt.config.ts:

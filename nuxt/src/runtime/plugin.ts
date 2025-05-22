@@ -1,5 +1,5 @@
 import { useRuntimeConfig } from '#imports';
-import { getSource, logCrawl } from '@askdoppler/core';
+import { getSource, logCrawl, type DopplerCrawlPayload } from '@askdoppler/core';
 import { defineNitroPlugin } from 'nitropack/runtime/internal/plugin';
 
 export default defineNitroPlugin((nitroApp) => {
@@ -14,9 +14,8 @@ export default defineNitroPlugin((nitroApp) => {
         return; // Continue with the request if no detection
       }
 
-      const payload = {
-        source: detection.source,
-        intent: detection.intent,
+      const payload: any = {
+        ...detection,
         userAgent: req.headers['user-agent'] || '',
         destinationURL: `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}${req.url}` || null,
         headers: Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(';') : v])),

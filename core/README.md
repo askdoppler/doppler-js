@@ -23,7 +23,7 @@ npm install @askdoppler/core
 2. **Detect and log a request:**
 
 ```ts
-import { getSource, logCrawl, handleCrawl } from "@askdoppler/core";
+import { getSource, logCrawl, handleCrawl } from '@askdoppler/core';
 
 // Simple usage in any Node.js/JS context:
 const detection = getSource(request); // returns { source, intent, detected }
@@ -31,16 +31,12 @@ const detection = getSource(request); // returns { source, intent, detected }
 // If detected, log:
 if (detection.detected) {
   await logCrawl({
-    source: detection.source,
-    intent: detection.intent,
-    userAgent: request.headers["user-agent"] || "",
+    ...detection,
+    userAgent: request.headers['user-agent'] || '',
     destinationURL: request.url,
     headers: request.headers,
   });
 }
-
-// Or use the unified handler (non-blocking, recommended for middleware)
-handleCrawl(request);
 ```
 
 3. **Environment Variable:**
@@ -56,13 +52,6 @@ DOPPLER_API_KEY=your-api-key-here
 - `getSource(req)` — Detects if request is from an AI platform and returns { source, intent, detected }
 - `logCrawl(payload, apiKey?)` — Logs a crawl event to Doppler API
 - `handleCrawl(req, apiKey?)` — Detects and logs in one step, for middleware
-
-## Development
-
-```sh
-bun build — Compile TypeScript to dist/
-bun watch — Watch mode for local development
-```
 
 ## License
 
