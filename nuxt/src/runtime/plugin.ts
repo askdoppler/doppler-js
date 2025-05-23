@@ -21,6 +21,12 @@ export default defineNitroPlugin((nitroApp) => {
         headers: Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(';') : v])),
       };
 
+      // GDPR-Compliance, 0 user-identifying information
+      if (payload.type === 'click') {
+        payload.userAgent = null;
+        payload.headers = null;
+      }
+
       // Log the crawl (non-blocking by design)
       logCrawl(payload, config.apiKey);
     } catch (error) {

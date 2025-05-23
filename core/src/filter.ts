@@ -1,4 +1,12 @@
 import { DopplerDetectionResult } from './types';
+import { normalizeHeaders } from './utils';
+import { OpenAI, Perplexity } from './filters/index';
+
+const filters = [new OpenAI(), new Perplexity()];
+
+filters.forEach(async (filter) => {
+  await filter.init();
+});
 
 export function getSource(req: { headers: Record<string, string | string[] | undefined>; url?: string }): DopplerDetectionResult {
   const headers = normalizeHeaders(req.headers);
@@ -29,59 +37,36 @@ export function getSource(req: { headers: Record<string, string | string[] | und
     }
   }
 
-  if (utmSource === 'chatgpt.com') {
-    return {
-      source: 'openai',
-      intent: 'browse',
-      type: 'click',
-      highlightedText,
-      detected: true,
-    };
+  if (utmSource) {
+    for (const filter of filters) {
+      for (const utm of filter.utm) {
+        if (utmSource.includes(utm)) {
+          return {
+            source: filter.name,
+            intent: 'browse',
+            type: 'click',
+            highlightedText,
+            detected: true,
+          };
+        }
+      }
+    }
   }
 
-  if (utmSource === 'perplexity.com') {
-    return {
-      source: 'perplexity',
-      intent: 'browse',
-      type: 'click',
-      highlightedText,
-      detected: true,
-    };
-  }
+  for (const filter of filters) {
+    const detected = filter.check(headers, url);
 
-  // Then check for crawl detection (user agents)
-  if (userAgent.includes('ChatGPT-User/1.0') || userAgent.includes('+https://openai.com/') || Object.keys(headers).some((h) => h.startsWith('x-openai'))) {
-    return {
-      source: 'openai',
-      intent: headers['x-openai-internal-caller'] || 'browse',
-      type: 'crawl',
-      highlightedText,
-      detected: true,
-    };
-  }
-
-  if (userAgent.includes('Perplexity-User/1.0') || userAgent.includes('+https://perplexity.ai/perplexity-user')) {
-    return {
-      source: 'perplexity',
-      intent: 'browse',
-      type: 'crawl',
-      highlightedText,
-      detected: true,
-    };
+    if (detected) {
+      return {
+        source: filter.name,
+        intent: filter.getIntent(userAgent),
+        type: 'crawl',
+        highlightedText: null,
+        detected: true,
+      };
+    }
   }
 
   // Not detected
   return { source: null, intent: null, type: null, highlightedText: null, detected: false };
-}
-
-function normalizeHeaders(headers: Record<string, string | string[] | undefined>): Record<string, string> {
-  const normalized: Record<string, string> = {};
-  for (const k in headers) {
-    const v = headers[k];
-    // Only add defined values, skip undefined
-    if (typeof v !== 'undefined') {
-      normalized[k.toLowerCase()] = Array.isArray(v) ? v.join(';') : v;
-    }
-  }
-  return normalized;
 }
