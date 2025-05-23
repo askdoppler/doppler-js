@@ -1,8 +1,8 @@
 import { DopplerDetectionResult } from './types';
 import { normalizeHeaders } from './utils';
-import { OpenAI, Perplexity } from './filters/index';
+import { OpenAI, Perplexity, Google } from './filters/index';
 
-const filters = [new OpenAI(), new Perplexity()];
+const filters = [new OpenAI(), new Perplexity(), new Google()];
 
 filters.forEach(async (filter) => {
   await filter.init();

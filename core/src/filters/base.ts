@@ -37,12 +37,27 @@ export abstract class BaseFilter {
     // If it's a string, get the first IP in the chain
     if (typeof forwardedFor === 'string') {
       const ip = forwardedFor.split(',')[0].trim();
-      return ip?.split('/')[0];
+      // Remove port for IPv4 (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+      // For IPv6, we need to be more careful as they contain colons
+      if (ip.includes('.') && ip.includes(':')) {
+        // IPv4 with port
+        return ip.split(':')[0];
+      }
+      // IPv6 addresses or IPv4 without port
+      return ip;
     }
 
     // If it's an array, get the first IP from the first entry
     const ip = forwardedFor?.[0]?.split(',')[0].trim();
-    return ip?.split('/')[0];
+    if (!ip) return undefined;
+
+    // Same logic for array case
+    if (ip.includes('.') && ip.includes(':')) {
+      // IPv4 with port
+      return ip.split(':')[0];
+    }
+    // IPv6 addresses or IPv4 without port
+    return ip;
   }
 
   /**
@@ -60,7 +75,25 @@ export abstract class BaseFilter {
    * @returns True if the IP is in the list, false otherwise
    */
   checkIp(ip: string): boolean {
-    return this.ips.some((storedIp) => storedIp === ip) || ('127.0.0.1' === ip && process.env.NODE_ENV === 'development');
+    // Check for development localhost (IPv4)
+    if (ip === '127.0.0.1' && process.env.NODE_ENV === 'development') {
+      return true;
+    }
+
+    // Check for development localhost (IPv6)
+    if ((ip === '::1' || ip === '::ffff:127.0.0.1') && process.env.NODE_ENV === 'development') {
+      return true;
+    }
+
+    // Check if the IP matches any stored IP prefixes (both IPv4 and IPv6)
+    return this.ips.some((storedIp) => {
+      // For exact matches
+      if (storedIp === ip) return true;
+
+      // For prefix matches (useful for CIDR ranges that were stripped of their /xx notation)
+      // This handles cases where the stored IP is a network prefix
+      return ip.startsWith(storedIp);
+    });
   }
 
   /**
@@ -106,7 +139,20 @@ export abstract class BaseFilter {
         const { prefixes } = data;
         if (!prefixes) continue;
 
-        range.push(...prefixes.map((prefix: { ipv4Prefix: string }) => prefix?.ipv4Prefix?.split('/')[0]));
+        // Handle both IPv4 and IPv6 prefixes
+        range.push(
+          ...prefixes
+            .map((prefix: { ipv4Prefix?: string; ipv6Prefix?: string }) => {
+              if (prefix?.ipv4Prefix) {
+                return prefix.ipv4Prefix.split('/')[0];
+              }
+              if (prefix?.ipv6Prefix) {
+                return prefix.ipv6Prefix.split('::/')[0];
+              }
+              return null;
+            })
+            .filter(Boolean),
+        );
       } catch {
         continue;
       }
