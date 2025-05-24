@@ -26,4 +26,4 @@ export default defineNuxtConfig({
 });
 ```
 
-That’s it — the module will log eligible AI-originated traffic automatically, head to the dashboard on [Doppler](https://askdoppler.com) to see the results.
+That’s it the module will log eligible AI-originated traffic automatically, head to the dashboard on [Doppler](https://askdoppler.com) to see the results.

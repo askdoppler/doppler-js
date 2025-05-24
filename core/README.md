@@ -49,9 +49,9 @@ DOPPLER_API_KEY=your-api-key-here
 
 ## API
 
-- `getSource(req)` — Detects if request is from an AI platform and returns { source, intent, detected }
-- `logCrawl(payload, apiKey?)` — Logs a crawl event to Doppler API
-- `handleCrawl(req, apiKey?)` — Detects and logs in one step, for middleware
+- `getSource(req)` : Detects if request is from an AI platform and returns { source, intent, detected }
+- `logCrawl(payload, apiKey?)` : Logs a crawl event to Doppler API
+- `handleCrawl(req, apiKey?)` : Detects and logs in one step, for middleware
 
 ## License
 
