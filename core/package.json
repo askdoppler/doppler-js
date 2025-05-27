@@ -1,6 +1,6 @@
 {
   "name": "@askdoppler/core",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Doppler Core: AI SEO / AEO traffic monitoring & intent detection, logging, and reporting for framework connectors.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -43,5 +43,8 @@
   "devDependencies": {
     "@types/node": "^22.15.20",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "ipaddr.js": "^2.2.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@askdoppler/nuxt",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "Doppler Nuxt integration for AI traffic monitoring.",
   "author": "AskDoppler <hello@askdoppler.com>",
   "keywords": [
@@ -51,7 +51,7 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@askdoppler/core": "^0.2.6",
+    "@askdoppler/core": "^0.2.7",
     "@nuxt/kit": "^3.17.3"
   },
   "devDependencies": {

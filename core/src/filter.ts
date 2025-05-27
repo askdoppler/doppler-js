@@ -1,6 +1,6 @@
-import { DopplerDetectionResult } from './types';
-import { normalizeHeaders } from './utils';
-import { OpenAI, Perplexity, Google, Bing } from './filters/index';
+import { DopplerDetectionResult } from './types.js';
+import { normalizeHeaders } from './utils.js';
+import { OpenAI, Perplexity, Google, Bing } from './filters/index.js';
 
 const filters = [new OpenAI(), new Perplexity(), new Google(), new Bing()];
 

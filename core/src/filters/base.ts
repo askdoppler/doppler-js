@@ -1,3 +1,5 @@
+import * as ipaddr from 'ipaddr.js'; // IPv4 / IPv6 + CIDR utilities
+
 /**
  * Base class for AI platform detection
  */
@@ -18,166 +20,148 @@ export abstract class BaseFilter {
 
   /**
    * Get the user agent from the headers
-   * @param headers - The headers of the request
-   * @returns The user agent from the headers
+   * @param headers - The request headers
+   * @returns The user-agent string, if present
    */
   getUserAgent(headers: Record<string, string | string[] | undefined>): string | undefined {
     return typeof headers['user-agent'] === 'string' ? headers['user-agent'] : headers['user-agent']?.join(' ');
   }
 
   /**
-   * Get the IP from the headers
-   * @param headers - The headers of the request
-   * @returns The IP from the headers
+   * Extract the client IP from `x-forwarded-for`
+   * @param headers - The request headers
+   * @returns The remote IP (best effort) or `undefined`
    */
   getIp(headers: Record<string, string | string[] | undefined>): string | undefined {
     const forwardedFor = headers['x-forwarded-for'];
     if (!forwardedFor) return undefined;
 
-    // If it's a string, get the first IP in the chain
-    if (typeof forwardedFor === 'string') {
-      const ip = forwardedFor.split(',')[0].trim();
-      // Remove port for IPv4 (e.g., "192.168.1.1:8080" -> "192.168.1.1")
-      // For IPv6, we need to be more careful as they contain colons
-      if (ip.includes('.') && ip.includes(':')) {
-        // IPv4 with port
-        return ip.split(':')[0];
-      }
-      // IPv6 addresses or IPv4 without port
-      return ip;
-    }
+    const first = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
 
-    // If it's an array, get the first IP from the first entry
-    const ip = forwardedFor?.[0]?.split(',')[0].trim();
-    if (!ip) return undefined;
+    if (!first) return undefined;
 
-    // Same logic for array case
-    if (ip.includes('.') && ip.includes(':')) {
-      // IPv4 with port
-      return ip.split(':')[0];
-    }
-    // IPv6 addresses or IPv4 without port
-    return ip;
+    const raw = first.split(',')[0].trim();
+
+    // IPv4 with port (e.g. "192.0.2.1:8080")
+    if (raw.includes('.') && raw.includes(':')) return raw.split(':')[0];
+
+    // Pure IPv6 or port-less IPv4
+    return raw;
   }
 
   /**
-   * Check if the user agent is in the list of user agents
-   * @param userAgent - The user agent to check
-   * @returns True if the user agent is in the list, false otherwise
+   * Check whether the UA contains any of the known platform strings
    */
   checkUserAgent(userAgent: string): boolean {
     return this.userAgents.some((ua) => userAgent.includes(ua));
   }
 
   /**
-   * Check if the IP is in the list of IPs
-   * @param ip - The IP to check
-   * @returns True if the IP is in the list, false otherwise
+   * Determine if an IP address lies inside a given CIDR block
+   * @param ip      Parsed address (ipaddr.js)
+   * @param cidrStr CIDR notation (IPv4 or IPv6)
+   */
+  private isInCidr(ip: ipaddr.IPv4 | ipaddr.IPv6, cidrStr: string): boolean {
+    try {
+      const cidr = ipaddr.parseCIDR(cidrStr); // [network, prefixLen]
+      return ip.match(cidr);
+    } catch {
+      return false; // invalid CIDR string
+    }
+  }
+
+  /**
+   * Verify whether an IP matches any allow-listed entry
+   * (exact, prefix-only, or full CIDR — IPv4 & IPv6)
    */
   checkIp(ip: string): boolean {
-    // Check for development localhost (IPv4)
-    if (ip === '127.0.0.1' && process.env.NODE_ENV === 'development') {
-      return true;
+    // Developer localhost shortcuts
+    if (process.env.NODE_ENV === 'development' && (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1')) return true;
+
+    let addr: ipaddr.IPv4 | ipaddr.IPv6;
+    try {
+      addr = ipaddr.parse(ip);
+
+      // Collapse IPv4-mapped IPv6 (::ffff:a.b.c.d) to IPv4
+      if (addr.kind() === 'ipv6' && (addr as ipaddr.IPv6).isIPv4MappedAddress()) {
+        addr = (addr as ipaddr.IPv6).toIPv4Address();
+      }
+    } catch {
+      return false; // malformed client IP
     }
 
-    // Check for development localhost (IPv6)
-    if ((ip === '::1' || ip === '::ffff:127.0.0.1') && process.env.NODE_ENV === 'development') {
-      return true;
-    }
+    return this.ips.some((stored) => {
+      // CIDR entry (contains '/')
+      if (stored.includes('/')) return this.isInCidr(addr, stored);
 
-    // Check if the IP matches any stored IP prefixes (both IPv4 and IPv6)
-    return this.ips.some((storedIp) => {
-      // For exact matches
-      if (storedIp === ip) return true;
+      // Exact match
+      try {
+        if (addr.toNormalizedString() === ipaddr.parse(stored).toNormalizedString()) return true;
+      } catch {
+        /* ignore bad stored entry */
+      }
 
-      // For prefix matches (useful for CIDR ranges that were stripped of their /xx notation)
-      // This handles cases where the stored IP is a network prefix
-      return ip.startsWith(storedIp);
+      // Legacy prefix (no '/')
+      return ip.startsWith(stored);
     });
   }
 
   /**
-   * Check if the request is from the AI platform
-   * @param headers - The headers of the request
-   * @param url - The URL of the request
-   * @returns True if the request is from the AI platform, false otherwise
+   * Main check combining IP and UA heuristics
    */
   check(headers: Record<string, string | string[] | undefined>, url?: string): boolean {
-    const userAgent = this.getUserAgent(headers);
+    const ua = this.getUserAgent(headers);
     const ip = this.getIp(headers);
 
-    if (!userAgent || !ip) return false;
+    if (!ua || !ip) return false;
 
     const ipMatch = this.checkIp(ip);
-    const userAgentMatch = this.checkUserAgent(userAgent || '');
+    const uaMatch = this.checkUserAgent(ua);
 
     if (process.env?.DOPPLER_DEBUG) {
-      console.log(
-        `[@askdoppler/core:filters:base] - Checking ${this.name} - User Agent: ${userAgent}, IP: ${ip}, IP Match: ${ipMatch}, User Agent Match: ${userAgentMatch}`,
-      );
+      console.log(`[@askdoppler/core:filters:base] (${this.name}) UA="${ua}" IP="${ip}" → ipMatch=${ipMatch} uaMatch=${uaMatch}`);
     }
-
-    return ipMatch && userAgentMatch;
+    return ipMatch && uaMatch;
   }
 
   /**
-   * Initialize the filter
-   * @returns True if the filter is initialized, false otherwise
+   * Initialise the filter (fetch IP ranges, etc.)
    */
   async init(): Promise<void> {
     if (process.env?.DOPPLER_DEBUG) {
-      console.log(`[@askdoppler/core:filters:base] - Initializing filter ${this.name}`);
+      console.log(`[@askdoppler/core:filters:base] - Initialising filter "${this.name}"`);
     }
-
     await this.getIps();
   }
 
   /**
-   * Get the IPs from the IP lists
-   * @returns The IPs from the IP lists
+   * Fetch prefix lists and populate `this.ips`
+   * Keeps the full CIDR so subnet checks work.
    */
   async getIps(): Promise<void> {
-    const range: string[] = [];
+    const ranges: string[] = [];
 
     for (const list of this.ipLists) {
       try {
-        const response = await fetch(list);
-        const data = await response.json();
+        const resp = await fetch(list);
+        const data = await resp.json();
+        if (!data?.prefixes) continue;
 
-        if (!data) continue;
-
-        const { prefixes } = data;
-        if (!prefixes) continue;
-
-        // Handle both IPv4 and IPv6 prefixes
-        range.push(
-          ...prefixes
-            .map((prefix: { ipv4Prefix?: string; ipv6Prefix?: string }) => {
-              if (prefix?.ipv4Prefix) {
-                return prefix.ipv4Prefix.split('/')[0];
-              }
-              if (prefix?.ipv6Prefix) {
-                return prefix.ipv6Prefix.split('::/')[0];
-              }
-              return null;
-            })
-            .filter(Boolean),
-        );
+        ranges.push(...data.prefixes.map((p: { ipv4Prefix?: string; ipv6Prefix?: string }) => p.ipv4Prefix ?? p.ipv6Prefix ?? null).filter(Boolean));
       } catch {
+        /* ignore network / parse errors and continue */
         continue;
       }
     }
 
-    this.ips = range;
+    this.ips = ranges;
     if (process.env?.DOPPLER_DEBUG) {
-      console.log(`[@askdoppler/core:filters:base] - Retrieved crawler IPs from ${this.name}, found ${this.ips.length} IPs`);
+      console.log(`[@askdoppler/core:filters:base] - Retrieved ${this.ips.length} ranges for ${this.name}`);
     }
   }
 
   /**
-   * Get the intent from the request
-   * @param userAgent - The user agent of the request
-   * @returns The intent from the request
+   * Return the platform-specific intent for analytics
    */
   protected abstract getIntent(userAgent: string): string;
 }

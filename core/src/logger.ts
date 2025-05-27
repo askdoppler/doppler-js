@@ -1,4 +1,4 @@
-import { DopplerCrawlPayload } from './types';
+import { DopplerCrawlPayload } from './types.js';
 
 const API_URL = process.env.DOPPLER_API_URL || 'https://askdoppler.com/api/traffic';
 

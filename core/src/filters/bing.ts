@@ -1,4 +1,4 @@
-import { BaseFilter } from './base';
+import { BaseFilter } from './base.js';
 
 /**
  * Check if the request is from Google
