@@ -111,6 +111,12 @@ export abstract class BaseFilter {
     const ipMatch = this.checkIp(ip);
     const userAgentMatch = this.checkUserAgent(userAgent || '');
 
+    if (process.env?.DOPPLER_DEBUG) {
+      console.log(
+        `[@askdoppler/core:filters:base] - Checking ${this.name} - User Agent: ${userAgent}, IP: ${ip}, IP Match: ${ipMatch}, User Agent Match: ${userAgentMatch}`,
+      );
+    }
+
     return ipMatch && userAgentMatch;
   }
 
@@ -119,6 +125,10 @@ export abstract class BaseFilter {
    * @returns True if the filter is initialized, false otherwise
    */
   async init(): Promise<void> {
+    if (process.env?.DOPPLER_DEBUG) {
+      console.log(`[@askdoppler/core:filters:base] - Initializing filter ${this.name}`);
+    }
+
     await this.getIps();
   }
 
@@ -159,6 +169,9 @@ export abstract class BaseFilter {
     }
 
     this.ips = range;
+    if (process.env?.DOPPLER_DEBUG) {
+      console.log(`[@askdoppler/core:filters:base] - Retrieved crawler IPs from ${this.name}, found ${this.ips.length} IPs`);
+    }
   }
 
   /**

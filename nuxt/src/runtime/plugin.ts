@@ -8,6 +8,11 @@ export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('request', (event) => {
     try {
       const req = event.node.req;
+
+      if (process.env?.DOPPLER_DEBUG) {
+        console.log(`[@askdoppler/nuxt:plugin] - Request detected: ${req.url}, getting source`);
+      }
+
       const detection = getSource(req);
 
       if (!detection.detected || !detection.source || !detection.intent) {
@@ -25,6 +30,10 @@ export default defineNitroPlugin((nitroApp) => {
       if (payload.type === 'click') {
         payload.userAgent = null;
         payload.headers = null;
+      }
+
+      if (process.env?.DOPPLER_DEBUG) {
+        console.log(`[@askdoppler/nuxt:plugin] - Sending payload ${JSON.stringify(payload, null, 4)}`);
       }
 
       // Log the crawl (non-blocking by design)

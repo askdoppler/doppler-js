@@ -19,11 +19,14 @@ export function getSource(req: { headers: Record<string, string | string[] | und
 
   // Extract highlighted text from URL fragment
   const textFragmentMatch = url.match(/#:~:text=([^&]+)/);
+
   if (textFragmentMatch) {
     try {
       highlightedText = decodeURIComponent(textFragmentMatch[1]);
     } catch (error) {
-      console.warn('Failed to decode highlighted text:', error);
+      if (process.env?.DOPPLER_DEBUG) {
+        console.warn('[@askdoppler/core:filter] - Failed to decode highlighted text:', error);
+      }
     }
   }
 
@@ -33,14 +36,24 @@ export function getSource(req: { headers: Record<string, string | string[] | und
       utmSource = urlParams.get('utm_source');
     } catch (error) {
       // If URL parsing fails, continue with other detection methods
-      console.warn('Failed to parse URL parameters:', error);
+      if (process.env?.DOPPLER_DEBUG) {
+        console.warn('[@askdoppler/core:filter] - Failed to parse URL parameters:', error);
+      }
     }
   }
 
   if (utmSource) {
+    if (process.env?.DOPPLER_DEBUG) {
+      console.log(`[@askdoppler/core:filter] - UTM source detected: ${utmSource}`);
+    }
+
     for (const filter of filters) {
       for (const utm of filter.utm) {
         if (utmSource.includes(utm)) {
+          if (process.env?.DOPPLER_DEBUG) {
+            console.log(`[@askdoppler/core:filter] - UTM source ${utm} found for ${filter.name}`);
+          }
+
           return {
             source: filter.name,
             intent: 'browse',
@@ -56,7 +69,15 @@ export function getSource(req: { headers: Record<string, string | string[] | und
   for (const filter of filters) {
     const detected = filter.check(headers, url);
 
+    if (process.env?.DOPPLER_DEBUG) {
+      console.log(`[@askdoppler/core:filter] - ${filter.name} detected: ${detected}`);
+    }
+
     if (detected) {
+      if (process.env?.DOPPLER_DEBUG) {
+        console.log(`[@askdoppler/core:filter] - ${filter.name} detected: ${detected}`);
+      }
+
       return {
         source: filter.name,
         intent: filter.getIntent(userAgent),
@@ -68,5 +89,9 @@ export function getSource(req: { headers: Record<string, string | string[] | und
   }
 
   // Not detected
+  if (process.env?.DOPPLER_DEBUG) {
+    console.log(`[@askdoppler/core:filter] - No filter detected`);
+  }
+
   return { source: null, intent: null, type: null, highlightedText: null, detected: false };
 }
