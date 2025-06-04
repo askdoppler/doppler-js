@@ -1,0 +1,49 @@
+{
+  "name": "@askdoppler/next",
+  "version": "0.1.0",
+  "description": "Next.js middleware for Doppler AI traffic monitoring.",
+  "author": "AskDoppler <hello@askdoppler.com>",
+  "keywords": [
+    "doppler",
+    "askdoppler",
+    "nextjs",
+    "ai-monitoring",
+    "ai-seo",
+    "traffic-analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/askdoppler/doppler-js"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@askdoppler/core": "^0.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.20",
+    "typescript": "^5.8.3"
+  }
+}

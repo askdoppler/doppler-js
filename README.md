@@ -20,6 +20,14 @@ A Nuxt 3 module that integrates Doppler's AI traffic detection into your Nuxt ap
 npm install @askdoppler/nuxt
 ```
 
+### [@askdoppler/next](./next/README.md)
+
+A Next.js middleware that logs eligible AI traffic for you.
+
+```sh
+npm install @askdoppler/next
+```
+
 ## Features
 
 - 🔍 **AI Traffic Detection**: Automatically identifies requests from AI platforms
@@ -35,6 +43,9 @@ npm install @askdoppler/nuxt
    ```sh
    # For Nuxt
    npm install @askdoppler/nuxt
+
+   # For Next.js
+   npm install @askdoppler/next
 
    # For other frameworks
    npm install @askdoppler/core
